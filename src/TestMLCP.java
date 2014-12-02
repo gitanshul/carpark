@@ -20,23 +20,25 @@ public class TestMLCP {
 		
 		SimulateMLCP sim_mlcp = new SimulateMLCP();
 		MLCP mlcp = new MLCP("Meenakshi Mall Car Parking", noOfFloorsInMLCP, noOfSlotsPerFloor);
-		sim_mlcp.simulateMLCP(mlcp, MLCPUtil.generateCars(noOfCarsToPark));
+		Queue<Car> carPool = MLCPUtil.generateCars(noOfCarsToPark);
+		sim_mlcp.simulateMLCP(mlcp, carPool);
 		
 		Queue<Car> parkedCars = mlcp.getParkedCars();
+		
+		/* Failure case 1: A full carpark should have same no. of cars that were fed to it */
 		if(parkedCars.size()!=noOfCarsToPark){
-			MLCPUtil.pprnt("ParkedCars count mismatch");
+			MLCPUtil.pprnt("ParkedCars count mismatch","!");
 		}
 		
+		/* Failure case 2: None of the slot should be empty after all the cars have been parked */
 		for(Car c : parkedCars){
 			if(!MLCP.SlotStatus.FULL.equals(c.getCarSlot().getStatus())){
-				MLCPUtil.pprnt("ParkedCar : "+c.getCarNumber()+" doesn't have a slot");
+				MLCPUtil.pprnt("ParkedCar : "+c.getCarNumber()+" doesn't have a slot","!");
 				break;
-			}else{
-				MLCPUtil.pprnt("Car : "+c.getCarNumber()+" Parked in Slot : "+c.getCarSlot().toString());
 			}
 		}
-		
-		MLCPUtil.pprnt("TestSimulateMLCP successful");
+		mlcp.printStatus();
+		MLCPUtil.pprnt("TestSimulateMLCP successful","@");
 				
 	}
 	

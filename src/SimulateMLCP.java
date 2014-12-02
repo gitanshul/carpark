@@ -11,7 +11,7 @@ public class SimulateMLCP {
 		BlockingQueue<Car> waitingCars = new ArrayBlockingQueue<Car>(mlcp.getTotalSlotCount());
 		externalCarPool = carPool;
 		
-		MLCPUtil.pprnt("Welcome to "+mlcp.getName()+" Simulation");
+		MLCPUtil.pprnt("Welcome to "+mlcp.getName()+" Simulation","*");
 		Thread t1 = new Thread(new CarFeeder(waitingCars, mlcp));
 		Thread t2 = new Thread(new CarAlloter(waitingCars, mlcp));
 		
@@ -26,17 +26,33 @@ public class SimulateMLCP {
 		}
 	}
 	
+	/**
+	 * This thread removes the cars from parking slot and adds them back to external car pool
+	 * @author anshulkhare
+	 *
+	 */
 	public class CarRemover implements Runnable{
-		BlockingQueue<Car> waitingCarQ;
 		MLCP mlcp;
-		public CarRemover(BlockingQueue<Car> carQ, MLCP mlcp) {
-			this.waitingCarQ = carQ;
+		public CarRemover(MLCP mlcp) {
 			this.mlcp = mlcp;
 		}
 		
 		@Override
 		public void run() {
-			
+			while(true){
+				long sleepTime = MLCPUtil.getRandom(5000,10000);
+				try {
+					Thread.sleep(sleepTime);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				Car nCar = mlcp.getParkedCars().peek();
+				long parkingDuration = System.currentTimeMillis() - nCar.getCarSlot().getStartTime();
+				if(parkingDuration > 5000l){
+					externalCarPool.add(mlcp.getParkedCars().poll().unPark());
+				}
+			}
 		}
 	}
 	
@@ -52,13 +68,13 @@ public class SimulateMLCP {
 		public void run() {
 			int counter = 0;
 			while(true){
-				long sleepTime = MLCPUtil.getRandomSleepTime(500,1000);
+				long sleepTime = MLCPUtil.getRandom(500,1000);
 				Car nCar = externalCarPool.poll();
 				if(null==nCar){
 					waitingCarQ.add(new Car("X")); // Special car to signal that there are no more cars left for today
 					break;
 				}
-				MLCPUtil.pprnt("Beep Beep ! A new car has arrived : "+nCar.getCarNumber());
+				MLCPUtil.pprnt("Beep Beep ! A new car has arrived : "+nCar.getCarNumber(),"-");
 				waitingCarQ.add(nCar);
 				counter++;
 				try {
@@ -67,7 +83,7 @@ public class SimulateMLCP {
 					e.printStackTrace();
 				}
 			}
-			MLCPUtil.pprnt("CarFeeder: I have worked on "+counter+" cars so far. I am OFF now !!");
+			MLCPUtil.pprnt("CarFeeder: I have worked on "+counter+" cars so far. I am OFF now !!","-");
 		}
 	}
 
@@ -88,16 +104,16 @@ public class SimulateMLCP {
 					if(car.getCarNumber().equals("X")){ // If the special car is found, it's the signal that there are no more cars.
 						break;
 					}
-					Thread.sleep(500); //Giving 2 secs for the car to get itself parked.
-					MLCP.Slot slot = mlcp.getNextAvailableSlot();
+					Thread.sleep(500); //Giving some time for the car to find and park itself.
+					MLCP.Slot slot = mlcp.getRandomAvailableSlot();
 					car.park(slot);
-					MLCPUtil.pprnt1("Voila ! "+car.getCarNumber()+" Parked in the slot : "+slot.toString());
+					MLCPUtil.pprnt("Voila ! "+car.getCarNumber()+" Parked in the slot : "+slot.toString(), "+");
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				counter++;				
 			}
-			MLCPUtil.pprnt1("Car Alloter: I have alloted "+counter+" cars. I am going OFF !!");			
+			MLCPUtil.pprnt("Car Alloter: I have alloted "+counter+" cars. I am going OFF !!", "+");			
 		}
 	}
 }

@@ -18,24 +18,12 @@ public class MLCPUtil {
 		}		
 		return carPool;
 	}
-
+	
 	public static void pprnt(String s){
-		if(debug){
-			int strLen = s.length();
-			int col_len = 80;
-			if(strLen > 150)
-				col_len = 250;
-			int padding = (col_len - strLen-2)/2;
-			String padStr = "";
-			for(int i=0; i <padding; i++){
-				padStr += "-"; 
-			}
-			
-			System.out.println(padStr+" "+s+" "+padStr);
-		}
+		pprnt(s, "-");
 	}
-
-	public static void pprnt1(String s){
+	
+	public static void pprnt(String s, String padder){
 		if(debug){
 			int strLen = s.length();
 			int col_len = 80;
@@ -44,7 +32,7 @@ public class MLCPUtil {
 			int padding = (col_len - strLen-2)/2;
 			String padStr = "";
 			for(int i=0; i <padding; i++){
-				padStr += "+"; 
+				padStr += padder; 
 			}
 			
 			System.out.println(padStr+" "+s+" "+padStr);
@@ -55,7 +43,7 @@ public class MLCPUtil {
 	 * Returns random time value between Min and Max (in milliseconds).
 	 * @return
 	 */
-	public static int getRandomSleepTime(int min, int max){
+	public static int getRandom(int min, int max){
 		Random rand = new Random();
 	    int randomNum = rand.nextInt((max - min) + 1) + min;
 

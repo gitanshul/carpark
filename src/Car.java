@@ -17,11 +17,12 @@ public class Car {
 		return false;
 	}
 	
-	public void unPark(){		
+	public Car unPark(){		
 		this.carSlot.empty();
 		long carParkDuration = (this.carSlot.getEndTime() - this.carSlot.getStartTime())/1000l;
 		this.history += this.carSlot.toString()+"|"+ carParkDuration+"|";
-		this.carSlot = null;		
+		this.carSlot = null;
+		return this;
 	}
 
 	public MLCP.Slot getCarSlot() {

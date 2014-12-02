@@ -1,6 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MLCP {
@@ -9,7 +8,7 @@ public class MLCP {
 	private Floor[] floors;
 	private int slotsPerFloor;
 	
-	private Queue<Car> parkedCars = new ConcurrentLinkedQueue<Car>();
+	private Queue<Car> parkedCars;
 	
 	public MLCP(String name, int noOfFloors, int slotsPerFloor) {
 		this.name = name;
@@ -19,6 +18,8 @@ public class MLCP {
 	}
 
 	private void initialize() {
+		this.parkedCars = new ArrayBlockingQueue<Car>(this.getTotalSlotCount());
+		
 		for(int i=0; i < this.floors.length; i++){
 			floors[i] = new Floor("MLCP-"+(i+1), i+1, this.slotsPerFloor); 
 		}
@@ -125,6 +126,20 @@ public class MLCP {
 		return null;
 	}
 
+	public Slot getRandomAvailableSlot(){		
+		for(Floor f : floors){
+			if(f.emptySlotCount > 0){
+				while(true){
+					Slot s = f.getSlots()[MLCPUtil.getRandom(0, f.noOfSlots-1)];
+					if(SlotStatus.EMPTY.equals(s.getStatus())){
+						return s;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	public int getEmptySlotCount(){
 		int totalEmptySlots = 0;
 		
@@ -161,6 +176,29 @@ public class MLCP {
 
 	public int getTotalSlotCount(){
 		return floors.length*slotsPerFloor;
+	}
+	
+	public void printStatus(){
+		
+		MLCPUtil.pprnt("No of Occupied Slots :"+(this.getTotalSlotCount()-this.getEmptySlotCount()),"=");
+		MLCPUtil.pprnt("No of Empty Slots :"+(this.getEmptySlotCount()),"=");
+		MLCPUtil.pprnt("Empty Slots","+");
+		for(Floor f : floors){
+			for(Slot s : f.getSlots()){
+				if(SlotStatus.EMPTY.equals(s.getStatus())){
+					MLCPUtil.pprnt(s.toString(),"-");
+				}
+			}
+		}
+		
+		MLCPUtil.pprnt("Filled Slots","+");
+		for(Floor f : floors){
+			for(Slot s : f.getSlots()){
+				if(!SlotStatus.EMPTY.equals(s.getStatus())){
+					MLCPUtil.pprnt(s.toString()+" had Car : "+s.getCar().getCarNumber(),"-");
+				}
+			}
+		}
 	}
 	
 	@Override
