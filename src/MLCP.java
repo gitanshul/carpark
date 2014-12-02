@@ -1,61 +1,172 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 public class MLCP {
 
-	Floor[] floors;
-
-	public MLCP() {
+	private String name;
+	private Floor[] floors;
+	private int slotsPerFloor;
+	
+	private Queue<Car> parkedCars = new ConcurrentLinkedQueue<Car>();
+	
+	public MLCP(String name, int noOfFloors, int slotsPerFloor) {
+		this.name = name;
+		this.floors = new Floor[noOfFloors];
+		this.slotsPerFloor = slotsPerFloor;
 		initialize();
 	}
 
 	private void initialize() {
-
+		for(int i=0; i < this.floors.length; i++){
+			floors[i] = new Floor("MLCP-"+(i+1), i+1, this.slotsPerFloor); 
+		}
 	}
 
 	public class Floor {
 		private String name;
-		private int level;
-		private Row[] rows;
-
-		public Floor(String name, int level, int noOfRows) {
+		private int level;	
+		private int noOfSlots;
+		private Slot[] slots;
+		private int emptySlotCount;
+		
+		public Floor(String name, int level, int noOfSlots) {
 			this.name = name;
-			this.level = level;
-			this.rows = new Row[noOfRows];
+			this.level = level;			
+			this.noOfSlots = noOfSlots;
+			
 			initialize();
 		}
 
 		private void initialize() {
-			for (int i = 0; i < rows.length; i++) {
-				rows[i] = new Row(this, "Row" + i);
+			emptySlotCount = noOfSlots;
+			slots = new Slot[noOfSlots];
+			for(int i=0; i < this.noOfSlots; i++){
+				Slot s = new Slot(this.name+"-Slot-"+(i+1), SlotStatus.EMPTY, this);
+				slots[i] = s;
 			}
 		}
 
+		public Slot[] getSlots(){
+			return this.slots;
+		}
 	}
-
 
 	public class Slot {
 		private String name;
 		private SlotStatus status;
-		private int startTime;
-		private int endTime;
-
-		Car parkedCar;
-		// Row slotRow;
-
-	}
-
-	public class Row {
-		private Floor myFloor;
-		private String name;
-		private Slot slots;
-
-		public Row(Floor f, String name) {
-			this.myFloor = f;
+		private long startTime;		
+		private long endTime;		
+		private Floor floor;
+		
+		private Car parkedCar;
+				
+		public Slot(String name, SlotStatus status, Floor f){
 			this.name = name;
+			this.status = status;
+			this.floor = f;
+		}
+		
+		Car getCar(){
+			return parkedCar;
+		}
+		
+		synchronized boolean setCar(Car car){
+			if(SlotStatus.EMPTY.equals(this.status)){
+				this.startTime = System.currentTimeMillis();
+				this.parkedCar = car;
+				this.status = SlotStatus.FULL;
+				parkedCars.add(car);
+				this.floor.emptySlotCount--;
+				return true;
+			}
+			return false;
+		}
+		
+		Car empty(){
+			this.endTime = System.currentTimeMillis();
+			this.status = SlotStatus.EMPTY;
+			parkedCars.remove(parkedCar);
+			Car carToRemove = parkedCar;
+			parkedCar = null;
+			this.floor.emptySlotCount++;
+			return carToRemove;
+		}
+		
+		public SlotStatus getStatus(){
+			return this.status;
+		}
+		
+		public long getStartTime() {
+			return startTime;
+		}
+
+		public long getEndTime() {
+			return endTime;
+		}
+
+		@Override
+		public String toString() {
+			return name;
 		}
 	}
 
+	public Slot getNextAvailableSlot(){		
+		for(Floor f : floors){
+			if(f.emptySlotCount > 0){
+				for(Slot s : f.slots){
+					if(SlotStatus.EMPTY.equals(s.status)){
+						return s;
+					}
+				}
+			}
+		}
+		return null;
+	}
 
+	public int getEmptySlotCount(){
+		int totalEmptySlots = 0;
+		
+		for(Floor f : floors){
+			totalEmptySlots += f.emptySlotCount;
+		}
+		
+		return totalEmptySlots;
+	}
+
+	public Queue<Car> getParkedCars(){
+		return parkedCars;
+	}
+	
+	public void shuffleCars(){
+		//TODO: implement
+	}
+	
+	public void swapCars(Slot s1, Slot s2){
+		//TODO: implement
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
 	public enum SlotStatus {
 		EMPTY, FULL
 	}
+	
+	public Floor[] getFloors() {
+		return floors;
+	}
 
+	public int getTotalSlotCount(){
+		return floors.length*slotsPerFloor;
+	}
+	
+	@Override
+	public String toString() {
+		
+		return "Testing "+this.name+" With "+this.floors.length+" Floors and "+
+					this.slotsPerFloor+" Slots per floor";
+	}
 }
